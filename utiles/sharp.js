@@ -13,8 +13,8 @@ async function optimizeImage(file) {
   const absolutePath = path.resolve(file.path);
 
   const extension = MIME_TYPES[file.mimetype];
-
-  const destinationPath = absolutePath.replace(`.${extension}`, ".webp");
+  const regex = new RegExp(`\\.${extension}$`);
+  const destinationPath = absolutePath.replace(regex, ".webp");
 
   await sharp(absolutePath)
     .resize({ width: 800, fit: "contain" })
@@ -25,7 +25,9 @@ async function optimizeImage(file) {
     if (err) console.log(err);
   });
 
-  return file.path.replace(`.${extension}`, ".webp");
+  const fixedFilePath = file.path.replace(/\\/g, "/");
+  console.log("file.path", fixedFilePath);
+  return fixedFilePath.replace(regex, ".webp");
 }
 
 export default optimizeImage;

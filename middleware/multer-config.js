@@ -1,4 +1,5 @@
 import multer from "multer";
+import sanitize from "sanitize-filename";
 
 const MIME_TYPES = {
   "image/jpg": "jpg",
@@ -12,9 +13,9 @@ const storage = multer.diskStorage({
     callback(null, "images");
   },
   filename: (req, file, callback) => {
-    const name = file.originalname.split(" ").join("_");
+    const originalName = sanitize(file.originalname.split(" ").join("_"));
     const extension = MIME_TYPES[file.mimetype];
-    callback(null, name + Date.now() + "." + extension);
+    callback(null, originalName + Date.now() + "." + extension);
   },
 });
 

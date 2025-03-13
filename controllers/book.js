@@ -13,6 +13,7 @@ const createBook = async (req, res) => {
       userId: req.auth.userId,
       imageUrl: `${req.protocol}://${req.get("host")}/${fileName}`,
     });
+    console.log("IMAGE", book );
     await book.save();
     res.status(201).json({ message: "Livre enregistré !" });
   } catch (error) {
