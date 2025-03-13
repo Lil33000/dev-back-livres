@@ -1,22 +1,22 @@
 import Book from "../models/Book.js";
 import fs from "fs";
+import optimizeImage from "../utiles/sharp.js";
 
 const createBook = async (req, res) => {
   try {
     const bookObject = JSON.parse(req.body.book);
+    const fileName = await optimizeImage(req.file);
     delete bookObject._id;
     delete bookObject._userId;
     const book = new Book({
       ...bookObject,
       userId: req.auth.userId,
-      imageUrl: `${req.protocol}://${req.get("host")}/images/${
-        req.file.filename
-      }`,
+      imageUrl: `${req.protocol}://${req.get("host")}/${fileName}`,
     });
     await book.save();
-    res.status(201).json({ message: "Objet enregistré !" });
+    res.status(201).json({ message: "Livre enregistré !" });
   } catch (error) {
-    res.status(400).json({ error });
+    res.status(400).json({ error }); // 400 car erreur potentiel de donné via mongo
   }
 };
 
@@ -43,9 +43,9 @@ const modifyBook = async (req, res) => {
       { _id: req.params.id },
       { ...bookObject, _id: req.params.id }
     );
-    res.status(200).json({ message: "Objet modifié!" });
+    res.status(200).json({ message: "Livre modifié!" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(400).json({ error });
   }
 };
 
@@ -61,7 +61,7 @@ const deleteBook = async (req, res) => {
     const filename = book.imageUrl.split("/images/")[1];
     fs.unlink(`images/${filename}`, async () => {
       await Book.deleteOne({ _id: req.params.id });
-      res.status(200).json({ message: "Objet supprimé !" });
+      res.status(200).json({ message: "Livre supprimé !" });
     });
   } catch (error) {
     res.status(500).json({ error });
@@ -140,6 +140,15 @@ const addRating = async (req, res) => {
   }
 };
 
+const getBestRatedBooks = async (req, res) => {
+  try {
+    const books = await Book.find().sort({ averageRating: -1 }).limit(3);
+    res.status(200).json(books);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
+
 export default {
   createBook,
   modifyBook,
@@ -148,4 +157,5 @@ export default {
   getAllBooks,
   addRating,
   getBookRatings,
+  getBestRatedBooks
 };
